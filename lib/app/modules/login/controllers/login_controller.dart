@@ -53,6 +53,7 @@ class LoginController extends GetxController {
           Session.username = data['username'];
           Session.idKrs = data['id_krs'];
           Session.idNilai = data['id_nilai'];
+          await Session.save();
           Get.offAllNamed(Routes.HOME);
           return;
         } else {
@@ -201,6 +202,8 @@ class LoginController extends GetxController {
           Session.idNilai = gradeMatch.group(1);
         }
       } catch (_) {}
+
+      await Session.save();
 
       Get.offAllNamed(Routes.HOME);
     } catch (e) {

@@ -30,7 +30,7 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchNews();
+    refreshHome();
   }
 
   void changeTab(int index) {
@@ -54,6 +54,39 @@ class HomeController extends GetxController {
     }
   }
 
+  String get todayNameIndonesian {
+    const days = {
+      DateTime.monday: 'Senin',
+      DateTime.tuesday: 'Selasa',
+      DateTime.wednesday: 'Rabu',
+      DateTime.thursday: 'Kamis',
+      DateTime.friday: 'Jumat',
+      DateTime.saturday: 'Sabtu',
+      DateTime.sunday: 'Minggu',
+    };
+    return days[DateTime.now().weekday] ?? 'Senin';
+  }
+
+  List<Map<String, dynamic>> get todaySchedule {
+    final todayUpper = todayNameIndonesian.toUpperCase();
+    return scheduleList.where((item) {
+      final dayStr = (item['day']?['day_indonesian'] ?? '').toString().toUpperCase();
+      return dayStr == todayUpper;
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> get top5News {
+    return newsList.take(5).toList();
+  }
+
+  Future<void> refreshHome() async {
+    await Future.wait([
+      fetchProfile(),
+      fetchNews(),
+      fetchSchedule(),
+    ]);
+  }
+
   Future<dynamic> _authorizedGet(String url) async {
     if (!Session.isAuthenticated) {
       Get.offAllNamed(Routes.LOGIN);
@@ -75,7 +108,7 @@ class HomeController extends GetxController {
       if (res.statusCode == 200) {
         return jsonDecode(res.body);
       } else if (res.statusCode == 401) {
-        Session.clear();
+        await Session.clear();
         Get.offAllNamed(Routes.LOGIN);
         return null;
       } else {
@@ -100,7 +133,7 @@ class HomeController extends GetxController {
       if (res.statusCode == 200) {
         return jsonDecode(body);
       } else if (res.statusCode == 401) {
-        Session.clear();
+        await Session.clear();
         Get.offAllNamed(Routes.LOGIN);
         return null;
       } else {
@@ -202,8 +235,8 @@ class HomeController extends GetxController {
     }
   }
 
-  void logout() {
-    Session.clear();
+  Future<void> logout() async {
+    await Session.clear();
     Get.offAllNamed(Routes.LOGIN);
   }
 }

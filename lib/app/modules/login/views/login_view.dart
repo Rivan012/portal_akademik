@@ -16,10 +16,14 @@ class LoginView extends GetView<LoginController> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.school_rounded,
-                  size: 80,
-                  color: Colors.blueAccent,
+                Image.asset(
+                  'assets/images/logo_unib.png',
+                  height: 90,
+                  errorBuilder: (_, _, _) => const Icon(
+                    Icons.school_rounded,
+                    size: 80,
+                    color: Colors.blueAccent,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 const Text(

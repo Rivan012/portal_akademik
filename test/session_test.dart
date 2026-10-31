@@ -1,9 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:portal_akademik/app/data/session.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  test('Session fallbacks and getters test', () {
-    Session.clear();
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  test('Session fallbacks, persistence and getters test', () async {
+    await Session.clear();
     expect(Session.effectiveIdKrs, equals(Session.fallbackIdKrs));
     expect(Session.effectiveIdNilai, equals(Session.fallbackIdNilai));
     expect(Session.isAuthenticated, isFalse);
@@ -18,7 +25,22 @@ void main() {
     expect(Session.isAuthenticated, isTrue);
     expect(Session.username, equals('G1F024047'));
 
-    Session.clear();
+    await Session.save();
+
+    // Reset memory values
+    Session.accessToken = null;
+    Session.username = null;
+    expect(Session.isAuthenticated, isFalse);
+
+    // Load back from SharedPreferences
+    await Session.load();
+    expect(Session.isAuthenticated, isTrue);
+    expect(Session.accessToken, equals('test_token'));
+    expect(Session.username, equals('G1F024047'));
+    expect(Session.idKrs, equals('custom_krs_123'));
+    expect(Session.idNilai, equals('custom_nilai_456'));
+
+    await Session.clear();
     expect(Session.effectiveIdKrs, equals(Session.fallbackIdKrs));
     expect(Session.effectiveIdNilai, equals(Session.fallbackIdNilai));
     expect(Session.isAuthenticated, isFalse);

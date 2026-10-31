@@ -2,6 +2,7 @@ import json
 import re
 import urllib.request
 import urllib.parse
+import urllib.error
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import http.cookiejar
 import ssl
@@ -130,6 +131,41 @@ class DevProxyHandler(BaseHTTPRequestHandler):
                 self._send_cors_headers()
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': False, 'message': str(e)}).encode('utf-8'))
+        elif self.path.startswith('/api/'):
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length) if content_length > 0 else b''
+            target_path = self.path[len('/api/'):]
+            target_url = f'https://api-gateway.unib.ac.id/backend/api/{target_path}'
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            if 'Authorization' in self.headers:
+                headers['Authorization'] = self.headers['Authorization']
+            if 'Content-Type' in self.headers:
+                headers['Content-Type'] = self.headers['Content-Type']
+            if 'Accept' in self.headers:
+                headers['Accept'] = self.headers['Accept']
+
+            try:
+                req = urllib.request.Request(target_url, data=post_data, headers=headers, method='POST')
+                with urllib.request.urlopen(req, context=ctx, timeout=35) as res:
+                    body = res.read()
+                    self.send_response(res.status)
+                    self.send_header('Content-Type', res.headers.get('Content-Type', 'application/json'))
+                    self._send_cors_headers()
+                    self.end_headers()
+                    self.wfile.write(body)
+            except urllib.error.HTTPError as he:
+                body = he.read()
+                self.send_response(he.code)
+                self.send_header('Content-Type', 'application/json')
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(body)
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
         else:
             self.send_response(404)
             self.end_headers()

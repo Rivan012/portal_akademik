@@ -1,4 +1,6 @@
-// ponytail: in-memory session only; upgrade to flutter_secure_storage for persistent auth.
+import 'package:shared_preferences/shared_preferences.dart';
+
+// ponytail: SharedPreferences storage; upgrade to flutter_secure_storage when encryption at rest is mandated.
 class Session {
   static String? csrfToken;
   static String? accessToken;
@@ -23,7 +25,29 @@ class Session {
   static bool get isAuthenticated =>
       accessToken != null && accessToken!.isNotEmpty;
 
-  static void clear() {
+  static Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    csrfToken = prefs.getString('csrfToken');
+    accessToken = prefs.getString('accessToken');
+    username = prefs.getString('username');
+    xsrfToken = prefs.getString('xsrfToken');
+    portalSession = prefs.getString('portalSession');
+    idKrs = prefs.getString('idKrs');
+    idNilai = prefs.getString('idNilai');
+  }
+
+  static Future<void> save() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (csrfToken != null) await prefs.setString('csrfToken', csrfToken!);
+    if (accessToken != null) await prefs.setString('accessToken', accessToken!);
+    if (username != null) await prefs.setString('username', username!);
+    if (xsrfToken != null) await prefs.setString('xsrfToken', xsrfToken!);
+    if (portalSession != null) await prefs.setString('portalSession', portalSession!);
+    if (idKrs != null) await prefs.setString('idKrs', idKrs!);
+    if (idNilai != null) await prefs.setString('idNilai', idNilai!);
+  }
+
+  static Future<void> clear() async {
     csrfToken = null;
     accessToken = null;
     username = null;
@@ -31,5 +55,8 @@ class Session {
     portalSession = null;
     idKrs = null;
     idNilai = null;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
   }
 }

@@ -1,8 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:portal_akademik/app/data/session.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  test('Token extraction and Session storage', () {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  test('Token extraction and Session storage', () async {
     const htmlSample = '''
       <html>
         <head><title>Dashboard</title></head>
@@ -25,7 +32,7 @@ void main() {
     expect(Session.csrfToken, equals('test_csrf'));
     expect(Session.accessToken, equals('test_access_token_12345'));
 
-    Session.clear();
+    await Session.clear();
     expect(Session.isAuthenticated, isFalse);
     expect(Session.accessToken, isNull);
   });
